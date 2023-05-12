@@ -1,38 +1,40 @@
 import Data.List
+import Text.XHtml (base)
 
--- TODO: make representations for S_1
-data Sphere = Sphere Int [Int]
+data SphereSpectrum = SphereSpectrum Int [Int]
 
-instance Show Sphere where
-    show (Sphere i s) = unwords (map (("s_" ++) . show) s) ++ " i_" ++ show i
+instance Show SphereSpectrum where
+    show (SphereSpectrum i s) = unwords (map (("s_" ++) . show) s) ++ " i_" ++ show i
 
-newtype Sum a = Sum [a]
+data Lie a = Unit a | Commutator (Lie a) (Lie a) | Sum [Lie a]
 
-instance Functor Sum where
-    fmap f (Sum a) = Sum (map f a)
-
-instance Show a => Show (Sum a) where
+instance Show a => Show (Lie a) where
+    show (Unit a) = show a
+    show (Commutator a b) = "[" ++ show a ++ ", " ++ show b ++ "]"
     show (Sum a) = intercalate " + " (map show a)
 
-data Commutator a = Commutator a a
+instance Functor Lie where
+    fmap f (Unit a) = Unit (f a)
+    fmap f (Commutator a b) = Commutator (fmap f a) (fmap f b)
+    fmap f (Sum a) = Sum (map (fmap f) a)
 
-instance Functor Commutator where
-    fmap f (Commutator a b) = Commutator (f a) (f b)
-
-instance Show a => Show (Commutator a) where
-    show (Commutator a b) = "[" ++ show a ++ ", " ++ show b ++ "]"
+s js (SphereSpectrum i s) = Unit $ SphereSpectrum (i `div` 2) (s ++ js)
 
 -- TODO: make lambda_i function
--- TODO: fix the order of suspensions (insert penultimate, I think)
-lambda_1 (Sphere i s) = Commutator (Sphere (i `div` 2) (0 : s)) (Sphere (i `div` 2) (1 : s))
+lambda_1 x = Commutator (s [0] x) (s [1] x)
 
-lambda_2 (Sphere i s) = Sum [
-    Commutator (Sphere (i `div` 2) (3 : 2 : s)) (Sphere (i `div` 2) (1 : 0 : s)),
-    Commutator (Sphere (i `div` 2) (2 : 1 : s)) (Sphere (i `div` 2) (3 : 0 : s)),
-    Commutator (Sphere (i `div` 2) (3 : 1 : s)) (Sphere (i `div` 2) (2 : 0 : s)) ]
+lambda_2 x = Sum [
+    Commutator (s [3, 2] x) (s [1, 0] x),
+    Commutator (s [2, 1] x) (s [3, 0] x),
+    Commutator (s [3, 1] x) (s [2, 0] x) ]
 
-lambda_1_lambda_1 = lambda_1 <$> lambda_1 (Sphere 4 [])
-lambda_2_lambda_1 = fmap lambda_1 <$> lambda_2 (Sphere 4 [])
+equivalence (Unit a) = a
+equivalence (Commutator a b) = Commutator (equivalence a) (equivalence b)
+equivalence (Sum as) = Sum (map equivalence as)
 
-main = do
-    print lambda_2_lambda_1
+lambda_1_lambda_1 = equivalence (lambda_1 <$> lambda_1 (SphereSpectrum 4 []))
+lambda_2_lambda_1 = equivalence (lambda_1 <$> lambda_2 (SphereSpectrum 4 []))
+lambda_1_lambda_1_lambda_1 = lambda_1 <$> equivalence (lambda_1 <$> lambda_1 (SphereSpectrum 8 []))
+
+-- main = do
+--     print lambda_1_lambda_1
