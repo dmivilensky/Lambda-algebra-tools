@@ -1,10 +1,24 @@
 import Data.List
-import Text.XHtml (base)
+
+toSubscript x = if x == 0 then "₀" else helper x where
+    helper 0 = ""
+    helper x = helper (x `div` 10) ++ subscript where
+        subscript = case x `rem` 10 of
+            0 -> "₀"
+            1 -> "₁"
+            2 -> "₂"
+            3 -> "₃"
+            4 -> "₄"
+            5 -> "₅"
+            6 -> "₆"
+            7 -> "₇"
+            8 -> "₈"
+            9 -> "₉"
 
 data SphereSpectrum = SphereSpectrum Int [Int]
 
 instance Show SphereSpectrum where
-    show (SphereSpectrum i s) = unwords (map (("s_" ++) . show) s) ++ " i_" ++ show i
+    show (SphereSpectrum i s) = concatMap (("s" ++) . toSubscript) s ++ " i" ++ toSubscript i
 
 data Lie a = Unit a | Commutator (Lie a) (Lie a) | Sum [Lie a]
 
@@ -36,5 +50,10 @@ lambda_1_lambda_1 = equivalence (lambda_1 <$> lambda_1 (SphereSpectrum 4 []))
 lambda_2_lambda_1 = equivalence (lambda_1 <$> lambda_2 (SphereSpectrum 4 []))
 lambda_1_lambda_1_lambda_1 = lambda_1 <$> equivalence (lambda_1 <$> lambda_1 (SphereSpectrum 8 []))
 
--- main = do
---     print lambda_1_lambda_1
+main = do
+    putStrLn "λ₁λ₁ = "
+    print lambda_1_lambda_1
+    putStrLn "λ₂λ₁ = "
+    print lambda_2_lambda_1
+    putStrLn "λ₁λ₁λ₁ = "
+    print lambda_1_lambda_1_lambda_1
