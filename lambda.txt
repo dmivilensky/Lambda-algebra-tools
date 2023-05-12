@@ -1,6 +1,9 @@
-λ₁λ₁ = 
-[[s₀s₀ i₁, s₀s₁ i₁], [s₁s₀ i₁, s₁s₁ i₁]]
-λ₂λ₁ = 
-[[s₃s₂s₀ i₁, s₃s₂s₁ i₁], [s₁s₀s₀ i₁, s₁s₀s₁ i₁]] + [[s₂s₁s₀ i₁, s₂s₁s₁ i₁], [s₃s₀s₀ i₁, s₃s₀s₁ i₁]] + [[s₃s₁s₀ i₁, s₃s₁s₁ i₁], [s₂s₀s₀ i₁, s₂s₀s₁ i₁]]
-λ₁λ₁λ₁ = 
-[[[s₀s₀s₀ i₁, s₀s₀s₁ i₁], [s₀s₁s₀ i₁, s₀s₁s₁ i₁]], [[s₁s₀s₀ i₁, s₁s₀s₁ i₁], [s₁s₁s₀ i₁, s₁s₁s₁ i₁]]]
+λ₁     = [s₀ i₁, s₁ i₁]
+λ₁λ₁   = [[s₀s₀ i₁, s₀s₁ i₁], [s₁s₀ i₁, s₁s₁ i₁]]
+λ₂λ₁   = [[s₃s₂s₀ i₁, s₃s₂s₁ i₁], [s₁s₀s₀ i₁, s₁s₀s₁ i₁]] + [[s₂s₁s₀ i₁, s₂s₁s₁ i₁], [s₃s₀s₀ i₁, s₃s₀s₁ i₁]] + [[s₃s₁s₀ i₁, s₃s₁s₁ i₁], [s₂s₀s₀ i₁, s₂s₀s₁ i₁]]
+λ₁λ₁λ₁ = [[[s₀s₀s₀ i₁, s₀s₀s₁ i₁], [s₀s₁s₀ i₁, s₀s₁s₁ i₁]], [[s₁s₀s₀ i₁, s₁s₀s₁ i₁], [s₁s₁s₀ i₁, s₁s₁s₁ i₁]]]
+
+λ₁     = [y, x]
+λ₁λ₁   = [[z, y], [z, x]]
+λ₂λ₁   = [[y, x], [p, z]] + [[p, x], [z, y]] + [[z, x], [p, y]]
+λ₁λ₁λ₁ = [[[p, z], [p, y]], [[p, z], [p, x]]]
