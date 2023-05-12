@@ -1,4 +1,5 @@
 import Data.List
+import Inversions
 
 toSubscript x = if x == 0 then "₀" else helper x where
     helper 0 = ""
@@ -34,21 +35,37 @@ instance Functor Lie where
 
 s js (SphereSpectrum i s) = Unit $ SphereSpectrum (i `div` 2) (s ++ js)
 
--- TODO: make lambda_i function
-lambda_1 x = Commutator (s [0] x) (s [1] x)
+subsequencesOfSize n xs = let l = length xs in if n>l then [] else subsequencesBySize xs !! (l-n) where
+    subsequencesBySize [] = [[[]]]
+    subsequencesBySize (x:xs) = let next = subsequencesBySize xs in zipWith (++) ([]:next) (map (map (x:)) next ++ [[]])
 
-lambda_2 x = Sum [
-    Commutator (s [3, 2] x) (s [1, 0] x),
-    Commutator (s [2, 1] x) (s [3, 0] x),
-    Commutator (s [3, 1] x) (s [2, 0] x) ]
+complement x [] = []
+complement [] y = y
+complement a@(x:xs) (y:ys) = if x /= y then y : complement a ys else complement xs ys
+
+shuffle n m = [(x, complement x [0,1..(n+m-1)]) | x <- subsequencesOfSize n [0,1..(n+m-1)]]
+
+notEqual [] [] = False
+notEqual x [] = True
+notEqual [] y = True
+notEqual (x:xs) (y:ys) = (x /= y) || notEqual xs ys
+
+unique [] = []
+unique (x:xs) = x : unique (filter (notEqual (fst x) . snd) xs)
+
+uniqueShuffles m = unique $ shuffle m m
+lambdaUnit i x = Sum [Commutator (s (reverse s1) x) (s (reverse s2) x) | (s1, s2) <- uniqueShuffles i]
 
 equivalence (Unit a) = a
 equivalence (Commutator a b) = Commutator (equivalence a) (equivalence b)
 equivalence (Sum as) = Sum (map equivalence as)
 
-lambda_1_lambda_1 = equivalence (lambda_1 <$> lambda_1 (SphereSpectrum 4 []))
-lambda_2_lambda_1 = equivalence (lambda_1 <$> lambda_2 (SphereSpectrum 4 []))
-lambda_1_lambda_1_lambda_1 = equivalence (lambda_1 <$> equivalence (lambda_1 <$> lambda_1 (SphereSpectrum 8 [])))
+lambda [i] x = lambdaUnit i x
+lambda (i:is) x = foldr (\j result -> equivalence (lambdaUnit j <$> result)) (lambdaUnit i x) is
+
+-- lambda_1_lambda_1 = equivalence (lambda 1 <$> lambda 1 (SphereSpectrum 4 []))
+-- lambda_2_lambda_1 = equivalence (lambda 1 <$> lambda 2 (SphereSpectrum 4 []))
+-- lambda_1_lambda_1_lambda_1 = equivalence (lambda 1 <$> equivalence (lambda 1 <$> lambda 1 (SphereSpectrum 8 [])))
 
 data FreeLie = FreeUnit Int | FreeCommutator FreeLie FreeLie | FreeSum [FreeLie]
 
@@ -74,20 +91,20 @@ computeSuspensionLie (Sum as) = FreeSum (map computeSuspensionLie as)
 
 main = do
     putStr "λ₁     = "
-    print $ lambda_1 (SphereSpectrum 2 [])
+    print $ lambda [1] (SphereSpectrum 2 [])
     putStr "λ₁λ₁   = "
-    print lambda_1_lambda_1
+    print $ lambda [1, 1] (SphereSpectrum 4 [])
     putStr "λ₂λ₁   = "
-    print lambda_2_lambda_1
+    print $ lambda [2, 1] (SphereSpectrum 4 [])
     putStr "λ₁λ₁λ₁ = "
-    print lambda_1_lambda_1_lambda_1
+    print $ lambda [1, 1, 1] (SphereSpectrum 8 [])
     putStrLn ""
 
     putStr "λ₁     = "
-    print $ computeSuspensionLie $ lambda_1 (SphereSpectrum 2 [])
+    print $ computeSuspensionLie $ lambda [1] (SphereSpectrum 2 [])
     putStr "λ₁λ₁   = "
-    print $ computeSuspensionLie lambda_1_lambda_1
+    print $ computeSuspensionLie $ lambda [1, 1] (SphereSpectrum 4 [])
     putStr "λ₂λ₁   = "
-    print $ computeSuspensionLie lambda_2_lambda_1
+    print $ computeSuspensionLie $ lambda [2, 1] (SphereSpectrum 4 [])
     putStr "λ₁λ₁λ₁ = "
-    print $ computeSuspensionLie lambda_1_lambda_1_lambda_1
+    print $ computeSuspensionLie $ lambda [1, 1, 1] (SphereSpectrum 8 [])
