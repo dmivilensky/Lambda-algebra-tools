@@ -63,10 +63,6 @@ equivalence (Sum as) = Sum (map equivalence as)
 lambda [i] x = lambdaUnit i x
 lambda (i:is) x = foldr (\j result -> equivalence (lambdaUnit j <$> result)) (lambdaUnit i x) is
 
--- lambda_1_lambda_1 = equivalence (lambda 1 <$> lambda 1 (SphereSpectrum 4 []))
--- lambda_2_lambda_1 = equivalence (lambda 1 <$> lambda 2 (SphereSpectrum 4 []))
--- lambda_1_lambda_1_lambda_1 = equivalence (lambda 1 <$> equivalence (lambda 1 <$> lambda 1 (SphereSpectrum 8 [])))
-
 data FreeLie = FreeUnit Int | FreeCommutator FreeLie FreeLie | FreeSum [FreeLie]
 
 instance Show FreeLie where
