@@ -1,20 +1,10 @@
 import Data.List
+import Data.Char
 import Inversions
 
-toSubscript x = if x == 0 then "₀" else helper x where
+toSubscript x = if x == 0 then "₀" else reverse $ helper x where
     helper 0 = ""
-    helper x = helper (x `div` 10) ++ subscript where
-        subscript = case x `rem` 10 of
-            0 -> "₀"
-            1 -> "₁"
-            2 -> "₂"
-            3 -> "₃"
-            4 -> "₄"
-            5 -> "₅"
-            6 -> "₆"
-            7 -> "₇"
-            8 -> "₈"
-            9 -> "₉"
+    helper x = chr (ord '₀' + (x `rem` 10)) : helper (x `div` 10)
 
 data SphereSpectrum = SphereSpectrum Int [Int]
 
@@ -25,7 +15,7 @@ data Lie a = Unit a | Commutator (Lie a) (Lie a) | Sum [Lie a]
 
 instance Show a => Show (Lie a) where
     show (Unit a) = show a
-    show (Commutator a b) = "[" ++ show a ++ ", " ++ show b ++ "]"
+    show (Commutator a b) = '[' : show a ++ ", " ++ show b ++ "]"
     show (Sum a) = intercalate " + " (map show a)
 
 instance Functor Lie where
@@ -39,15 +29,15 @@ subsequencesOfSize n xs = let l = length xs in if n>l then [] else subsequencesB
     subsequencesBySize [] = [[[]]]
     subsequencesBySize (x:xs) = let next = subsequencesBySize xs in zipWith (++) ([]:next) (map (map (x:)) next ++ [[]])
 
-complement x [] = []
-complement [] y = y
-complement a@(x:xs) (y:ys) = if x /= y then y : complement a ys else complement xs ys
+complement [] i j = [i,(i+1)..j]
+complement a@(x:xs) i j | i > j     = []
+                        | otherwise = if x /= i then i : complement a (i+1) j else complement xs (i+1) j
 
-shuffle n m = [(x, complement x [0,1..(n+m-1)]) | x <- subsequencesOfSize n [0,1..(n+m-1)]]
+shuffle n m = [(x, complement x 0 (n+m-1)) | x <- subsequencesOfSize n [0,1..(n+m-1)]]
 
 notEqual [] [] = False
-notEqual x [] = True
-notEqual [] y = True
+notEqual x []  = True
+notEqual [] y  = True
 notEqual (x:xs) (y:ys) = (x /= y) || notEqual xs ys
 
 unique [] = []
@@ -65,17 +55,11 @@ lambda (i:is) x = foldr (\j result -> equivalence (lambdaUnit j <$> result)) (la
 
 data FreeLie = FreeUnit Int | FreeCommutator FreeLie FreeLie | FreeSum [FreeLie]
 
+letters = ["x", "y", "z", "p", "q", "u", "v", "w"]
+
 instance Show FreeLie where
-    show (FreeUnit a) = case a of
-        0 -> "x"
-        1 -> "y"
-        2 -> "z"
-        3 -> "p"
-        4 -> "q"
-        5 -> "u"
-        6 -> "v"
-        7 -> "w"
-    show (FreeCommutator a b) = "[" ++ show a ++ ", " ++ show b ++ "]"
+    show (FreeUnit a) = letters !! a
+    show (FreeCommutator a b) = '[' : show a ++ ", " ++ show b ++ "]"
     show (FreeSum a) = intercalate " + " (map show a)
 
 computeSuspension i [j] = if j <= i then i + 1 else i
