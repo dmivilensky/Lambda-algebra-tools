@@ -23,8 +23,6 @@ instance Functor Lie where
     fmap f (Commutator a b) = Commutator (fmap f a) (fmap f b)
     fmap f (Sum a) = Sum (map (fmap f) a)
 
-s js (SphereSpectrum i s) = Unit $ SphereSpectrum (i `div` 2) (s ++ js)
-
 subsequencesOfSize n xs = let l = length xs in if n>l then [] else subsequencesBySize xs !! (l-n) where
     subsequencesBySize [] = [[[]]]
     subsequencesBySize (x:xs) = let next = subsequencesBySize xs in zipWith (++) ([]:next) (map (map (x:)) next ++ [[]])
@@ -44,14 +42,16 @@ unique [] = []
 unique (x:xs) = x : unique (filter (notEqual (fst x) . snd) xs)
 
 uniqueShuffles m = unique $ shuffle m m
+
+s js (SphereSpectrum i s) = Unit $ SphereSpectrum (i `div` 2) (s ++ js)
+
 lambdaUnit i x = Sum [Commutator (s (reverse s1) x) (s (reverse s2) x) | (s1, s2) <- uniqueShuffles i]
 
 equivalence (Unit a) = a
 equivalence (Commutator a b) = Commutator (equivalence a) (equivalence b)
 equivalence (Sum as) = Sum (map equivalence as)
 
-lambda [i] x = lambdaUnit i x
-lambda (i:is) x = foldr (\j result -> equivalence (lambdaUnit j <$> result)) (lambdaUnit i x) is
+lambda is x = foldl (\result j -> equivalence $ lambdaUnit j <$> result) (Unit x) is
 
 data FreeLie = FreeUnit Int | FreeCommutator FreeLie FreeLie | FreeSum [FreeLie]
 
@@ -62,8 +62,8 @@ instance Show FreeLie where
     show (FreeCommutator a b) = '[' : show a ++ ", " ++ show b ++ "]"
     show (FreeSum a) = intercalate " + " (map show a)
 
-computeSuspension i [j] = if j <= i then i + 1 else i
-computeSuspension i s   = computeSuspension (computeSuspension i (tail s)) [head s]
+computeSuspension i []     = i
+computeSuspension i (j:js) = let i' = computeSuspension i js in if j <= i' then i' + 1 else i'
 
 computeSuspensionLie (Unit (SphereSpectrum i s)) = FreeUnit (computeSuspension (i-1) s)
 computeSuspensionLie (Commutator a b) = FreeCommutator (computeSuspensionLie a) (computeSuspensionLie b)
